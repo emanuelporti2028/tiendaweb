@@ -1,0 +1,87 @@
+!doctype html
+html lang=es
+head
+  meta charset=utf-8 
+  meta name=viewport content=width=device-width,initial-scale=1 
+  titleViandas Saludablestitle
+  link rel=stylesheet href=style.css 
+head
+body
+  header class=site-header
+    div class=wrap
+      h1Viandas Saludablesh1
+      p class=taglineComidas sanas listas para llevar — pedí rápido desde el celularp
+    div
+  header
+
+  main class=wrap
+    section id=productos class=productos-section
+      h2Nuestros Menúsh2
+      div id=productosGrid class=griddiv
+    section
+
+    section id=orderSection class=order-section
+      h2Hacer un pedido rápidoh2
+      form id=orderForm class=order-form
+        labelProducto
+          select id=orderProduct requiredselect
+        label
+
+        labelCantidad
+          input type=number id=orderQuantity min=1 value=1 required 
+        label
+
+        labelNombre
+          input type=text id=orderName placeholder=Nombre completo required 
+        label
+
+        labelTeléfono
+          input type=tel id=orderPhone placeholder=11 1234 5678 
+        label
+
+        labelDirección (opcional)
+          input type=text id=orderAddress placeholder=Calle, número, piso 
+        label
+
+        labelForma de pago
+          select id=orderPayment required
+            option value=EfectivoEfectivooption
+            option value=TransferenciaTransferenciaoption
+            option value=MercadoPagoMercadoPagooption
+          select
+        label
+
+        div class=form-actions
+          button type=submit class=btn primaryEnviar pedidobutton
+        div
+
+        p id=orderMsg class=order-msg aria-live=politep
+      form
+    section
+
+    section id=stats class=stats-section
+      h2Estadísticas rápidash2
+      div class=stats-grid
+        div class=stat-card
+          h3Ventas hoyh3
+          p id=statDay$0p
+        div
+        div class=stat-card
+          h3Ventas esta semanah3
+          p id=statWeek$0p
+        div
+        div class=stat-card
+          h3Ventas este mesh3
+          p id=statMonth$0p
+        div
+      div
+    section
+
+    footer class=footer
+      pHecho con ❤️ — Viandas Saludablesp
+    footer
+  main
+
+  script src=script.jsscript
+body
+html

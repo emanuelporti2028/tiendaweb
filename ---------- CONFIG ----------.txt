@@ -1,0 +1,195 @@
+ ---------- CONFIG ---------- 
+ Replace SUPABASE_URL and SUPABASE_KEY with your values to enable cloud storage.
+ If left as 'REPLACE', the app stores data locally (localStorage).
+ To use Supabase crea una tabla pedidos con columnas
+  - id (bigint auto)
+  - cliente (text)
+  - telefono (text)
+  - direccion (text)
+  - producto (text)
+  - cantidad (int)
+  - forma_pago (text)
+  - total (numeric)
+  - created_at (timestamp with time zone) default now()
+--------------------------------
+const SUPABASE_URL = 'REPLACE'  e.g. httpsxyzcompany.supabase.co
+const SUPABASE_KEY = 'REPLACE'  anon key
+
+ ---------- Datos de ejemplo de productos ---------- 
+const products = [
+  { id 'm1', title 'Vianda Pollo + Verduras', price 650, img 'httpsimages.unsplash.comphoto-1604908177522-9a6b5a2bd7f9auto=format&fit=crop&w=800&q=60' },
+  { id 'm2', title 'Vianda Vegetariana', price 620, img 'httpsimages.unsplash.comphoto-1542444459-db62b5b4532bauto=format&fit=crop&w=800&q=60' },
+  { id 'm3', title 'Vianda Pescado + Quinoa', price 720, img 'httpsimages.unsplash.comphoto-1543353071-087092ec393aauto=format&fit=crop&w=800&q=60' },
+];
+
+ ---------- DOM refs ---------- 
+const productosGrid = document.getElementById('productosGrid');
+const orderProduct = document.getElementById('orderProduct');
+const orderForm = document.getElementById('orderForm');
+const orderMsg = document.getElementById('orderMsg');
+const statDay = document.getElementById('statDay');
+const statWeek = document.getElementById('statWeek');
+const statMonth = document.getElementById('statMonth');
+
+ ---------- Render productos ---------- 
+function renderProducts(){
+  productosGrid.innerHTML = '';
+  products.forEach(p={
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      img src=${p.img} alt=${p.title}
+      h4${p.title}h4
+      p class=price$${p.price}p
+      p class=descPorción, lista para calentar.p
+      div style=margin-topauto;displayflex;gap8px
+        button class=btn secondary onclick=prefillOrder('${p.id}')Pedirbutton
+      div
+    `;
+    productosGrid.appendChild(card);
+
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = `${p.title} — $${p.price}`;
+    orderProduct.appendChild(opt);
+  });
+}
+
+ ---------- Prefill order when clickean en tarjeta ---------- 
+function prefillOrder(productId){
+  orderProduct.value = productId;
+  window.scrollTo({top document.getElementById('orderSection').offsetTop - 20, behavior'smooth'});
+}
+
+ ---------- Storage helpers ---------- 
+const STORAGE_KEY = 'viandas_pedidos_v1';
+
+async function saveOrder(order){
+  if(SUPABASE_URL !== 'REPLACE' && SUPABASE_KEY !== 'REPLACE'){
+     Guardar en Supabase por REST
+    try{
+      const res = await fetch(`${SUPABASE_URL}restv1pedidos`, {
+        method 'POST',
+        headers {
+          'Content-Type' 'applicationjson',
+          'apikey' SUPABASE_KEY,
+          'Authorization' `Bearer ${SUPABASE_KEY}`,
+          'Prefer' 'return=representation'
+        },
+        body JSON.stringify(order)
+      });
+      if(!res.ok){
+        const txt = await res.text();
+        console.error('Supabase error', res.status, txt);
+        throw new Error('Error guardando en Supabase');
+      }
+      const data = await res.json();
+       también mantenemos copia local
+      addLocalOrder(data[0]);
+      return data[0];
+    }catch(err){
+      console.error(err);
+      throw err;
+    }
+  } else {
+    const local = addLocalOrder(order);
+    return local;
+  }
+}
+
+function addLocalOrder(order){
+  const all = JSON.parse(localStorage.getItem(STORAGE_KEY)  '[]');
+  const withTs = {...order, created_at new Date().toISOString()};
+  all.push(withTs);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+  computeStats();
+  return withTs;
+}
+
+function getLocalOrders(){
+  return JSON.parse(localStorage.getItem(STORAGE_KEY)  '[]');
+}
+
+ ---------- Form submit ---------- 
+orderForm.addEventListener('submit', async (e)={
+  e.preventDefault();
+  orderMsg.textContent = 'Enviando...';
+  const prodId = orderProduct.value;
+  const product = products.find(p=p.id === prodId);
+  const cantidad = parseInt(document.getElementById('orderQuantity').value,10)  1;
+  const cliente = document.getElementById('orderName').value.trim();
+  const telefono = document.getElementById('orderPhone').value.trim();
+  const direccion = document.getElementById('orderAddress').value.trim();
+  const forma_pago = document.getElementById('orderPayment').value;
+
+  const total = product.price  cantidad;
+  const orderObj = {
+    cliente,
+    telefono,
+    direccion,
+    producto product.title,
+    cantidad,
+    forma_pago,
+    total
+  };
+
+  try{
+    await saveOrder(orderObj);
+    orderMsg.textContent = 'Pedido guardado correctamente ✅';
+    orderForm.reset();
+    orderProduct.value = products[0].id;
+    setTimeout(()= orderMsg.textContent = '', 3500);
+  }catch(err){
+    orderMsg.textContent = 'Error al guardar. Reintentá y revisá la consola.';
+  }
+});
+
+ ---------- Stats ---------- 
+function computeStats(){
+  const all = getLocalOrders();
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());  domingo
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const sum = (arr) = arr.reduce((s, o) = s + (parseFloat(o.total)  0), 0);
+
+  const day = all.filter(o = new Date(o.created_at) = startOfDay);
+  const week = all.filter(o = new Date(o.created_at) = startOfWeek);
+  const month = all.filter(o = new Date(o.created_at) = startOfMonth);
+
+  statDay.textContent = '$' + sum(day);
+  statWeek.textContent = '$' + sum(week);
+  statMonth.textContent = '$' + sum(month);
+}
+
+ ---------- Init ---------- 
+function init(){
+  renderProducts();
+  orderProduct.value = products[0].id;
+  computeStats();
+}
+init();
+
+ ---------- Optional función para sincronizar pedidos desde Supabase al local (solo si usás supabase) ---------- 
+async function syncFromSupabase(){
+  if(SUPABASE_URL === 'REPLACE'  SUPABASE_KEY === 'REPLACE') return;
+  try{
+    const res = await fetch(`${SUPABASE_URL}restv1pedidosselect=`, {
+      headers {
+        'apikey' SUPABASE_KEY,
+        'Authorization' `Bearer ${SUPABASE_KEY}`
+      }
+    });
+    if(!res.ok) throw new Error('Error fetch pedidos');
+    const data = await res.json();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    computeStats();
+    console.log('Sincronizado desde Supabase', data.length);
+  }catch(err){
+    console.error('Sync fail', err);
+  }
+}
+ Llamar syncFromSupabase() manualmente desde consola si lo necesitas
+ syncFromSupabase();
+
